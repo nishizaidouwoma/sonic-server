@@ -52,7 +52,8 @@ public class TransportServer {
 
     @Autowired
     private ConfListService confListService;
-
+    @Autowired
+    private DevicesLogService devicesLogService;
     @OnOpen
     public void onOpen(Session session, @PathParam("agentKey") String agentKey) throws IOException {
         log.info("Session: {} is requesting auth server.", session.getId());
@@ -101,6 +102,9 @@ public class TransportServer {
                 break;
             }
             case "debugUser":
+               //记录控制手机时间以及用户
+                devicesLogService.saveDevicesLog(jsonMsg);
+                //用户控制手机更新
                 devicesService.updateDevicesUser(jsonMsg);
                 break;
             case "heartBeat":
@@ -129,6 +133,7 @@ public class TransportServer {
                 resultsService.subResultCount(jsonMsg.getInteger("rid"));
                 break;
             case "deviceDetail":
+                //退出手机
                 devicesService.deviceStatus(jsonMsg);
                 break;
             case "step":
