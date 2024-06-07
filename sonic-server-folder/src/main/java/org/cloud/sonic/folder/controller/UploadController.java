@@ -97,7 +97,12 @@ public class UploadController {
         if (!uuidFolder.exists()) {
             uuidFolder.mkdirs();
         }
+        
         String fileName = file.getOriginalFilename();
+        if (fileName == null) {
+            return new RespModel(RespEnum.UPLOAD_FAIL);
+        }
+        fileName = new File(fileName).getName();
         String newName = fileName.substring(0, fileName.indexOf(".mp4")) + "-" + index + ".mp4";
         File local = new File(uuidFolder.getPath() + File.separator + newName);
         RespModel<String> responseModel;
