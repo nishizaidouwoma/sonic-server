@@ -26,8 +26,8 @@ public class DevicesLogServiceImpl extends SonicServiceImpl<DevicesLogMapper, De
     @Override
     public DevicesLog findByUdId(String udId) {
         //.isNull(DevicesLog::getEditTime)
-        List<DevicesLog> devicesList = lambdaQuery().eq(DevicesLog::getDevicesId, udId).list();
-        if (devicesList.size() > 0) {
+        List<DevicesLog> devicesList = lambdaQuery().eq(DevicesLog::getDevicesId, udId).isNull(DevicesLog::getEditTime).list();
+        if (!devicesList.isEmpty()) {
             return devicesList.get(0);
         } else {
             return null;
@@ -40,13 +40,32 @@ public class DevicesLogServiceImpl extends SonicServiceImpl<DevicesLogMapper, De
         Users users = usersService.getUserInfo(jsonObject.getString("token"));
         DevicesLog dl = findByUdId(String.valueOf(jsonObject.getString("udId")));
         DevicesLog devicesLog =new DevicesLog();
+        devicesLog.setDevicesId(jsonObject.getString("udId"));
+        devicesLog.setCreateTime(new Date());
+        if(users!=null)  {
+            devicesLog.setUser(users.getUserName());
+        }
+        if(dl ==null){
+            save(devicesLog);
+        }
+
+    }
+
+    @Override
+    public void updateDevicesLog(JSONObject jsonObject) {
+        //获得当前登录用户；
+        Users users = usersService.getUserInfo(jsonObject.getString("token"));
+        DevicesLog dl = findByUdId(String.valueOf(jsonObject.getString("udId")));
+        DevicesLog devicesLog =new DevicesLog();
         if(dl !=null){
             BeanUtils.copyProperties(dl, devicesLog);
             devicesLog.setEditTime(new Date());
         }else {
-        devicesLog.setUser(users.getUserName());
-        devicesLog.setDevicesId(jsonObject.getString("udId"));
-        devicesLog.setCreateTime(new Date());
+            if(users!=null)  {
+                devicesLog.setUser(users.getUserName());
+            }
+            devicesLog.setDevicesId(jsonObject.getString("udId"));
+            devicesLog.setCreateTime(new Date());
         }
         save(devicesLog);
     }

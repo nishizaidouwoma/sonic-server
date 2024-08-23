@@ -25,6 +25,7 @@ import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
 import org.cloud.sonic.controller.config.WsEndpointConfigure;
 import org.cloud.sonic.controller.models.domain.Agents;
+import org.cloud.sonic.controller.models.domain.Users;
 import org.cloud.sonic.controller.models.interfaces.AgentStatus;
 import org.cloud.sonic.controller.models.interfaces.ConfType;
 import org.cloud.sonic.controller.services.*;
@@ -54,6 +55,8 @@ public class TransportServer {
     private ConfListService confListService;
     @Autowired
     private DevicesLogService devicesLogService;
+    @Autowired
+    private UsersService usersService;
     @OnOpen
     public void onOpen(Session session, @PathParam("agentKey") String agentKey) throws IOException {
         log.info("Session: {} is requesting auth server.", session.getId());
@@ -85,6 +88,7 @@ public class TransportServer {
 
     @OnMessage
     public void onMessage(String message, Session session) {
+        Users users ;
         JSONObject jsonMsg = JSON.parseObject(message);
         if (jsonMsg.getString("msg").equals("ping")) {
             Session agentSession = BytesTool.agentSessionMap.get(jsonMsg.getInteger("agentId"));
@@ -102,8 +106,7 @@ public class TransportServer {
                 break;
             }
             case "debugUser":
-               //记录控制手机时间以及用户
-                devicesLogService.saveDevicesLog(jsonMsg);
+                users = usersService.getUserInfo(jsonMsg.getString("token"));
                 //用户控制手机更新
                 devicesService.updateDevicesUser(jsonMsg);
                 break;
@@ -133,10 +136,17 @@ public class TransportServer {
                 resultsService.subResultCount(jsonMsg.getInteger("rid"));
                 break;
             case "deviceDetail":
-                //退出手机
                 devicesService.deviceStatus(jsonMsg);
                 break;
             case "step":
+            case "openDevices":
+                //更新退出时间
+                //记录控制手机时间以及用户
+                devicesLogService.saveDevicesLog(jsonMsg);
+                break;
+            case "closeDevices":
+                devicesLogService.updateDevicesLog(jsonMsg);
+                break;
             case "perform":
             case "record":
             case "status":

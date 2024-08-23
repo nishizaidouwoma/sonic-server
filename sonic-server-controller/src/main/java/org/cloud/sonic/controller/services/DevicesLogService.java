@@ -9,4 +9,7 @@ public interface DevicesLogService extends IService<DevicesLog> {
     DevicesLog findByUdId(String udId);
 
     void saveDevicesLog(JSONObject jsonObject);
+
+    void updateDevicesLog(JSONObject jsonObject);
+
 }
